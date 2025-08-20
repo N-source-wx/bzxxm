@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>海棠礦工活動 - 慕慕計算器 (v2.0)</title>
+    <title>海棠礦工活動 - 慕慕計算器 (C2.1)</title>
     <style>
         :root {
             --primary: #4a6fa5;
@@ -570,7 +570,6 @@
             <!-- 第三欄：每日消費計算 -->
             <div class="panel">
                 <h2 class="panel-title">每日消費計算 (7天)</h2>
-                <p style="margin-bottom: 15px; color: var(--secondary); font-size: 14px;">每天可買炸彈 0-100 個，1個10葉</p>
                 
                 <div class="day-columns">
                     <!-- 7天的消費輸入區域將通過JavaScript動態生成 -->
@@ -709,7 +708,7 @@
             { level: 37, expRequired: 1350, totalExp: 27000, reward: "7級自選寶石*1" },
             { level: 38, expRequired: 1350, totalExp: 28350, reward: "極品定緣珠*1" },
             { level: 39, expRequired: 1350, totalExp: 29700, reward: "自選境界神通*10" },
-            { level: 40, expRequired: 0, totalExp: 29700, reward: "平天力王化身" }
+            { level: 40, expRequired: 1350, totalExp: 0, reward: "平天力王化身" }
         ];
 
         // 儲值獎勵數據
@@ -727,7 +726,7 @@
             { leaves: 60000, hooks: 400 }
         ];
 
-        // 消費獎勵級距
+        // 消費獎勵等級
         const consumptionRewards = [
             { leaves: 200, hooks: 3 },
             { leaves: 500, hooks: 3 },
@@ -839,27 +838,35 @@
             dayColumns.innerHTML = '';
             
             for (let day = 1; day <= 7; day++) {
+                // 設定預設值：第1天和第2天為0，其他天數為20鉤子、2炸彈
+                const defaultHooks = (day === 1 || day === 2) ? "0" : "20";
+                const defaultBombs = (day === 1 || day === 2) ? "0" : "2";
+                
                 const column = document.createElement('div');
                 column.className = 'day-column';
                 column.innerHTML = `
                     <div class="day-title">第${day}天</div>
                     <div class="input-group">
                         <label for="free-day-${day}-hooks">未領取鉤子</label>
-                        <input type="number" id="free-day-${day}-hooks" value="20" min="0" 
-                               data-day="${day}" class="day-input">
+                        <select id="free-day-${day}-hooks" data-day="${day}" class="day-input">
+                            <option value="0" ${defaultHooks === "0" ? "selected" : ""}>0</option>
+                            <option value="20" ${defaultHooks === "20" ? "selected" : ""}>20</option>
+                        </select>
                     </div>
                     <div class="input-group">
                         <label for="free-day-${day}-bombs">未領取炸彈</label>
-                        <input type="number" id="free-day-${day}-bombs" value="2" min="0" 
-                               data-day="${day}" class="day-input">
+                        <select id="free-day-${day}-bombs" data-day="${day}" class="day-input">
+                            <option value="0" ${defaultBombs === "0" ? "selected" : ""}>0</option>
+                            <option value="2" ${defaultBombs === "2" ? "selected" : ""}>2</option>
+                        </select>
                     </div>
                 `;
                 dayColumns.appendChild(column);
                 
                 // 添加事件監聽（使用防抖）
                 const debouncedUpdate = debounce(updateAllCalculations, 300);
-                document.getElementById(`free-day-${day}-hooks`).addEventListener('input', debouncedUpdate);
-                document.getElementById(`free-day-${day}-bombs`).addEventListener('input', debouncedUpdate);
+                document.getElementById(`free-day-${day}-hooks`).addEventListener('change', debouncedUpdate);
+                document.getElementById(`free-day-${day}-bombs`).addEventListener('change', debouncedUpdate);
             }
         }
 
@@ -1184,22 +1191,28 @@
         // 頁面載入時初始化
         window.addEventListener('DOMContentLoaded', init);
 
-        // 添加鍵盤快捷鍵支持
+        // 添加鍵盤快捷鍵支援
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'r') {
                 e.preventDefault();
+                
                 // 重置所有輸入
                 document.querySelectorAll('input[type="number"]').forEach(input => {
                     if (input.id === 'hook-exp-value') {
                         input.value = '15';
-                    } else if (input.id.includes('free-day') && input.id.includes('hooks')) {
-                        input.value = '20';
-                    } else if (input.id.includes('free-day') && input.id.includes('bombs')) {
-                        input.value = '2';
                     } else {
                         input.value = '0';
                     }
                 });
+                
+                // 重置每日免費領取下拉選單
+                for (let day = 1; day <= 7; day++) {
+                    const defaultHooks = (day === 1 || day === 2) ? "0" : "20";
+                    const defaultBombs = (day === 1 || day === 2) ? "0" : "2";
+                    document.getElementById(`free-day-${day}-hooks`).value = defaultHooks;
+                    document.getElementById(`free-day-${day}-bombs`).value = defaultBombs;
+                }
+                
                 document.getElementById('total-topup').value = '0';
                 document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                     checkbox.checked = false;
@@ -1210,3 +1223,4 @@
     </script>
 </body>
 </html>
+        
